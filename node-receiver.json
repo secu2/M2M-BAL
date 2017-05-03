@@ -1,0 +1,177 @@
+[
+   {
+      "id":"8f01f689.9c234",
+      "type":"mqtt in",
+      "z":"fa504e67.33eeb",
+      "name":"",
+      "topic":"sensor/mails",
+      "qos":"2",
+      "broker":"467ba6fe.dc3c18",
+      "x":103,
+      "y":130,
+      "wires":[
+         [
+            "c7bf9fb4.0f9998",
+            "113aea13.573136"
+         ]
+      ]
+   },
+   {
+      "id":"c7bf9fb4.0f9998",
+      "type":"function",
+      "z":"fa504e67.33eeb",
+      "name":"Compare with last",
+      "func":"// initialise the counter to 0 if it doesn't exist already\nvar last = context.get('last')||-1;\nif(last==-1){\n    context.set('last',msg.payload);\n    return {\n        filled: false, \n        emtied: false\n    };\n}\nvar lastR = last;\nvar filled = false;\nvar emptied = false;\nlast = msg.payload;\ncontext.set('last',last);\nif(last-lastR > 3){\n    filled = true;\n}else if(lastR-last > 3){\n    emptied = true;\n}\nreturn {\n    filled: filled, \n    emptied: emptied\n};\n",
+      "outputs":"1",
+      "noerr":0,
+      "x":326,
+      "y":131,
+      "wires":[
+         [
+            "755d1c51.6a9b74"
+         ]
+      ]
+   },
+   {
+      "id":"5ec9366f.92485",
+      "type":"e-mail",
+      "z":"fa504e67.33eeb",
+      "server":"REPLACE_ME_WITH_SMTP_HOSTNAME",
+      "port":"465",
+      "secure":true,
+      "name":"REPLACE_ME_WITH_EMAIL_ADDRESS",
+      "dname":"Mail 2",
+      "x":766,
+      "y":82,
+      "wires":[
+
+      ]
+   },
+   {
+      "id":"755d1c51.6a9b74",
+      "type":"function",
+      "z":"fa504e67.33eeb",
+      "name":"Is filled/emptied",
+      "func":"if(msg.filled == true){\n    msg = {\n        payload: \"Vous avez du courrier\",\n        from: \"contact@clementbrocard.fr\",\n        to: \"os.moren@gmail.com\",\n        topic: \"BAL\"\n    };\n    return msg;\n}else if(msg.emptied == true){\n    msg = {\n        payload: \"Votre courrier a bien été récupéré\",\n        from: \"contact@clementbrocard.fr\",\n        to: \"os.moren@gmail.com\",\n        topic: \"BAL\"\n    };\n    return msg;\n}",
+      "outputs":"1",
+      "noerr":0,
+      "x":569,
+      "y":134,
+      "wires":[
+         [
+            "1483f9cb.e4933e",
+            "5ec9366f.92485",
+            "75902092.6e69b8"
+         ]
+      ]
+   },
+   {
+      "id":"1483f9cb.e4933e",
+      "type":"debug",
+      "z":"fa504e67.33eeb",
+      "name":"",
+      "active":false,
+      "console":"false",
+      "complete":"true",
+      "x":751,
+      "y":137,
+      "wires":[
+
+      ]
+   },
+   {
+      "id":"113aea13.573136",
+      "type":"function",
+      "z":"fa504e67.33eeb",
+      "name":"MQTT to InfluxDB",
+      "func":"var tokens = msg.topic.split(\"/\");\nvar dest = tokens[tokens.length-1];\nmsg.url =\"http://localhost:8086/write?db=bal\";\nmsg.payload = \"measurement,device=13ruechamrousse value=\" + msg.payload;\nreturn msg;",
+      "outputs":1,
+      "noerr":0,
+      "x":347,
+      "y":366,
+      "wires":[
+         [
+            "f01845f3.a6a17",
+            "fa9e1a5d.813db8"
+         ]
+      ]
+   },
+   {
+      "id":"f01845f3.a6a17",
+      "type":"http request",
+      "z":"fa504e67.33eeb",
+      "name":"",
+      "method":"POST",
+      "ret":"txt",
+      "url":"http://localhost:8086/write?db=bal",
+      "tls":"",
+      "x":587,
+      "y":366,
+      "wires":[
+         [
+            "f7544060.c4f068"
+         ]
+      ]
+   },
+   {
+      "id":"f7544060.c4f068",
+      "type":"debug",
+      "z":"fa504e67.33eeb",
+      "name":"",
+      "active":false,
+      "console":"false",
+      "complete":"true",
+      "x":773,
+      "y":366,
+      "wires":[
+
+      ]
+   },
+   {
+      "id":"fa9e1a5d.813db8",
+      "type":"debug",
+      "z":"fa504e67.33eeb",
+      "name":"",
+      "active":false,
+      "console":"false",
+      "complete":"true",
+      "x":547,
+      "y":505,
+      "wires":[
+
+      ]
+   },
+   {
+      "id":"75902092.6e69b8",
+      "type":"e-mail",
+      "z":"fa504e67.33eeb",
+      "server":"REPLACE_ME_WITH_SMTP_HOSTNAME",
+      "port":"465",
+      "secure":true,
+      "name":"REPLACE_ME_WITH_EMAIL_ADDRESS",
+      "dname":"Mail 1",
+      "x":767,
+      "y":37,
+      "wires":[
+
+      ]
+   },
+   {
+      "id":"467ba6fe.dc3c18",
+      "type":"mqtt-broker",
+      "z":"",
+      "broker":"127.0.0.1",
+      "port":"1883",
+      "clientid":"",
+      "usetls":false,
+      "compatmode":true,
+      "keepalive":"60",
+      "cleansession":true,
+      "willTopic":"",
+      "willQos":"0",
+      "willPayload":"",
+      "birthTopic":"",
+      "birthQos":"0",
+      "birthPayload":""
+   }
+]
